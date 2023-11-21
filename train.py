@@ -25,6 +25,19 @@ import random
 import time 
 from SemanticAligner import SemanticAligner
 
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=0.25, gamma=2.0):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, inputs, targets):
+        BCE_loss = torch.nn.functional.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        pt = torch.exp(-BCE_loss)
+        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
+        return F_loss.mean()
+
+
 def train(cfg, args):
     logging.info("Create train_loader and val_loader.........")
     train_loader_kwargs = {
@@ -67,7 +80,9 @@ def train(cfg, args):
     ]
     )
 
+    focalloss = FocalLoss().to(device)
     mseloss = nn.MSELoss()
+
     start_epoch = 0
     best_val = 0
     if cfg.train.restore:
@@ -115,8 +130,20 @@ def train(cfg, args):
             loss_ce = torch.max(torch.tensor(0.0).cuda(),
                              1.0 + logits - logits[answers_agg + torch.from_numpy(batch_agg).cuda()])
             loss_ce = loss_ce.sum()
+            
+
             recon_loss = mseloss(visual_embedding_decoder, video_appearance_feat)
-            loss = loss_ce + 0*recon_loss
+
+            logits_focal = logits.view(-1, 4)
+            batch_size = answers.shape[0]
+            num_choices = 4
+            answers_one_hot = torch.zeros(batch_size, num_choices, device=device)
+            answers_one_hot[torch.arange(batch_size), answers] = 1
+
+            loss_focal = focalloss(logits_focal, answers_one_hot)
+
+            loss = 0.01 * loss_ce + loss_focal
+
             loss.backward()
             total_loss += loss.detach()
             avg_loss = total_loss / (i + 1)
