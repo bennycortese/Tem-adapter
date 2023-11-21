@@ -32,7 +32,7 @@ class TempAligner(nn.Module):
         self.positional_encoding = PositionalEncoding(module_dim, dropout=0.1)
         encoder_layer = nn.TransformerEncoderLayer(d_model=module_dim, nhead=16)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=1)
-        decoder_layer = nn.TransformerDecoderLayer(d_model=module_dim, nhead=16) 
+        decoder_layer = nn.TransformerDecoderLayer(d_model=module_dim, nhead=16)
         self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=1)
 
         init_modules(self.modules(), w_init="xavier_uniform")

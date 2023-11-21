@@ -40,12 +40,21 @@ def train(cfg, args):
     logging.info("number of train instances: {}".format(len(train_loader.dataset)))
     logging.info("Create model.........")
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    clip_model, clip_preprocess = clip.load("ViT-B/32", device=device) 
+    print("hi")
+    print(device)
+   # print(f'Using CUDA device: {torch.cuda.get_device_name(0)}')
+    try:
+      clip_model, clip_preprocess = clip.load("ViT-B/32", device=device)
+    except Exception as e:
+      print(e)
+    print("die")
     clip_model.float()
     model_kwargs = {
         'vision_dim': cfg.train.vision_dim,
         'module_dim': cfg.train.module_dim,
     }
+
+    print("here")
     model_kwargs_tosave = {k: v for k, v in model_kwargs.items() if k != 'vocab'}
     tempaligner = TempAligner.TempAligner(**model_kwargs).to(device)
 
@@ -68,6 +77,7 @@ def train(cfg, args):
         start_epoch = ckpt['epoch'] + 1
         model.load_state_dict(ckpt['state_dict'])
         optimizer.load_state_dict(ckpt['optimizer'])
+    print("still alive")
     logging.info("Start training........")
     for epoch in range(start_epoch, cfg.train.max_epochs):
         logging.info('>>>>>> epoch {epoch} <<<<<<'.format(epoch=colored("{}".format(epoch), "green", attrs=["bold"])))
@@ -106,7 +116,7 @@ def train(cfg, args):
                              1.0 + logits - logits[answers_agg + torch.from_numpy(batch_agg).cuda()])
             loss_ce = loss_ce.sum()
             recon_loss = mseloss(visual_embedding_decoder, video_appearance_feat)
-            loss = 0.01*loss_ce + recon_loss
+            loss = loss_ce + 0*recon_loss
             loss.backward()
             total_loss += loss.detach()
             avg_loss = total_loss / (i + 1)
