@@ -125,20 +125,20 @@ def train(cfg, args):
             batch_inputs = [answers,  answers_features, video_appearance_feat, question_features]
             optimizer.zero_grad()
             logits, visual_embedding_decoder = tempaligner(*batch_inputs)
-            # batch_agg = np.concatenate(np.tile(np.arange(batch_size).reshape([batch_size, 1]),
-            #                                   [1, 4])) * 4  # [0, 0, 0, 0, 0, 5, 5, 5, 5, 1, ...]
-            # answers_agg = tile(answers, 0, 4)
-            # loss_ce = torch.max(torch.tensor(0.0).cuda(),
-            #                 1.0 + logits - logits[answers_agg + torch.from_numpy(batch_agg).cuda()])
-            # loss_ce = loss_ce.sum()
+            batch_agg = np.concatenate(np.tile(np.arange(batch_size).reshape([batch_size, 1]),
+                                               [1, 4])) * 4  # [0, 0, 0, 0, 0, 5, 5, 5, 5, 1, ...]
+            answers_agg = tile(answers, 0, 4)
+            loss_ce = torch.max(torch.tensor(0.0).cuda(),
+                             1.0 + logits - logits[answers_agg + torch.from_numpy(batch_agg).cuda()])
+            loss_ce = loss_ce.sum()
 
-            ce_loss_function = nn.CrossEntropyLoss()
-            logits_ce = logits.view(-1, 4)
+            # ce_loss_function = nn.CrossEntropyLoss()
+            # logits_ce = logits.view(-1, 4)
             # batch_size = answers.shape[0]
             # num_choices = 4
             # answers_one_hot = torch.zeros(batch_size, num_choices, device=device)
             # answers_one_hot[torch.arange(batch_size), answers] = 1
-            loss_ce = ce_loss_function(logits_ce, answers)
+            # loss_ce = ce_loss_function(logits_ce, answers)
             
 
             recon_loss = mseloss(visual_embedding_decoder, video_appearance_feat)

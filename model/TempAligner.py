@@ -73,7 +73,9 @@ class TempAligner(nn.Module):
         tgt_key_padding_mask = src_key_padding_mask
 
         visual_embedding = self.transformer_encoder(src=video_appearance_feat, src_key_padding_mask=~src_key_padding_mask)
-        visual_embedding_answer = visual_embedding + correct_answers
+        # print("Visual embedding shape: ", visual_embedding.shape)
+        # print("g shape: ", correct_answers.shape)
+        visual_embedding_answer = visual_embedding * correct_answers
         visual_embedding_decoder = self.transformer_decoder(tgt=video_appearance_feat, memory=visual_embedding_answer, tgt_mask=tgt_mask, tgt_key_padding_mask=~tgt_key_padding_mask)
         visual_embedding = visual_embedding.permute(1,0,2)
         visual_embedding_decoder = visual_embedding_decoder.permute(1,0,2)

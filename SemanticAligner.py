@@ -62,7 +62,7 @@ class TransformerDecoderLayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         self.mlp = nn.Sequential(
-            nn.Linear(d_model, d_model * 4),
+           nn.Linear(d_model, d_model * 4),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(d_model * 4, d_model)
